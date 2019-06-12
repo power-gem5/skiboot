@@ -374,6 +374,9 @@ static void disable_unavailable_units(struct dt_node *dev)
 		/* Incase of mambo, just fake it */
 		if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS)
 			avl_vec = (0xffULL) << 56;
+		/* In case of gem5, fake it like mambo */
+		if (proc_chip_quirks & QUIRK_GEM5_CALLOUTS)
+			avl_vec = (0xffULL) << 56;
 	}
 
 	for (i = 0; i < ARRAY_SIZE(nest_pmus); i++) {
@@ -429,6 +432,9 @@ void imc_catalog_preload(void)
 	compress_buf_size = MAX_COMPRESSED_IMC_DTB_SIZE;
 
 	if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS)
+		return;
+
+	if (proc_chip_quirks & QUIRK_GEM5_CALLOUTS)
 		return;
 
 	/* Enable only for power 9 */
@@ -534,7 +540,7 @@ void imc_init(void)
 	struct dt_node *dev;
 	int err_flag = -1;
 
-	if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) {
+	if ((proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) || (proc_chip_quirks & QUIRK_GEM5_CALLOUTS)) {
 		dev = dt_find_compatible_node(dt_root, NULL,
 					"ibm,opal-in-memory-counters");
 		if (!dev)
@@ -594,7 +600,7 @@ imc_mambo:
 	/* Update the base_addr and chip-id for nest nodes */
 	imc_dt_update_nest_node(dev);
 
-	if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS)
+	if ((proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) || (proc_chip_quirks & QUIRK_GEM5_CALLOUTS))
 		return;
 
 	/*
@@ -687,7 +693,7 @@ static int64_t opal_imc_counters_init(uint32_t type, uint64_t addr, uint64_t cpu
 		phys_core_id = cpu_get_core_index(c);
 		port_id = phys_core_id % 4;
 
-		if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS)
+		if ((proc_chip_quirks & QUIRK_MAMBO_CALLOUTS)  || (proc_chip_quirks & QUIRK_GEM5_CALLOUTS))
 			return OPAL_SUCCESS;
 
 		/*
@@ -764,7 +770,7 @@ static int64_t opal_imc_counters_init(uint32_t type, uint64_t addr, uint64_t cpu
 		phys_core_id = cpu_get_core_index(c);
 		port_id = phys_core_id % 4;
 
-		if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS)
+		if ((proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) || (proc_chip_quirks & QUIRK_GEM5_CALLOUTS))
 			return OPAL_SUCCESS;
 
 		if (has_deep_states) {
@@ -826,7 +832,7 @@ static int64_t opal_imc_counters_start(uint32_t type, uint64_t cpu_pir)
 		/* Set the run command */
 		op = NEST_IMC_ENABLE;
 
-		if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS)
+		if ((proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) || (proc_chip_quirks & QUIRK_GEM5_CALLOUTS))
 			return OPAL_SUCCESS;
 
 		/* Write the command to the control block now */
@@ -842,7 +848,7 @@ static int64_t opal_imc_counters_start(uint32_t type, uint64_t cpu_pir)
 		phys_core_id = cpu_get_core_index(c);
 		port_id = phys_core_id % 4;
 
-		if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS)
+		if ((proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) || (proc_chip_quirks & QUIRK_GEM5_CALLOUTS))
 			return OPAL_SUCCESS;
 
 		/*
@@ -887,7 +893,7 @@ static int64_t opal_imc_counters_stop(uint32_t type, uint64_t cpu_pir)
 		/* Set the run command */
 		op = NEST_IMC_DISABLE;
 
-		if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS)
+		if ((proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) || (proc_chip_quirks & QUIRK_GEM5_CALLOUTS))
 			return OPAL_SUCCESS;
 
 		/* Write the command to the control block */
@@ -904,7 +910,7 @@ static int64_t opal_imc_counters_stop(uint32_t type, uint64_t cpu_pir)
 		phys_core_id = cpu_get_core_index(c);
 		port_id = phys_core_id % 4;
 
-		if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS)
+		if ((proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) || (proc_chip_quirks & QUIRK_GEM5_CALLOUTS))
 			return OPAL_SUCCESS;
 
 		/*

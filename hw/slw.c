@@ -778,10 +778,10 @@ void add_cpu_idle_state_properties(void)
 	 * for the smaller of all chips instead..
 	 */
 	chip = next_chip(NULL);
-	assert(chip);
+	//assert(chip);
 	if (chip->type == PROC_CHIP_P9_NIMBUS ||
 	    chip->type == PROC_CHIP_P9_CUMULUS) {
-		if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) {
+		if ((proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) || (proc_chip_quirks & QUIRK_GEM5_CALLOUTS)){
 			states = power9_mambo_cpu_idle_states;
 			nr_states = ARRAY_SIZE(power9_mambo_cpu_idle_states);
 		} else {
@@ -1465,7 +1465,7 @@ void slw_init(void)
 {
 	struct proc_chip *chip;
 
-	if (proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) {
+	if ((proc_chip_quirks & QUIRK_MAMBO_CALLOUTS) || (proc_chip_quirks & QUIRK_GEM5_CALLOUTS)) {
 		wakeup_engine_state = WAKEUP_ENGINE_NOT_PRESENT;
 		add_cpu_idle_state_properties();
 		return;

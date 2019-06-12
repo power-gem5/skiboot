@@ -22,6 +22,7 @@
 #include <ccan/str/str.h>
 #include <device.h>
 #include <types.h>
+#include <chip.h>
 
 #include "hdata.h"
 
@@ -141,6 +142,7 @@ static void add_xics_icps(void)
 	u64 reg[PACA_MAX_THREADS * 2];
 	struct dt_node *icp;
 
+  prlog(PR_DEBUG, "CUSTOM: within add_xics_icps");
 	dt_for_each_node(dt_root, cpu) {
 		u32 irange[2], size, pir;
 		const struct dt_property *intsrv;
@@ -210,6 +212,8 @@ static bool __paca_parse(void)
 	const struct HDIF_common_hdr *paca;
 	struct dt_node *cpus;
 
+	
+  prlog(PR_DEBUG, "CUSTOM: within PACA parse");
 	paca = get_hdif(&spira.ntuples.paca, PACA_HDIF_SIG);
 	if (!paca) {
 		prerror("Invalid PACA (PCIA = %p)\n",
@@ -328,7 +332,7 @@ static bool __paca_parse(void)
 	 * P7 and P8 use the XICS interrupt controller which has a per-core
 	 * interrupt controller node.
 	 */
-	if (proc_gen <= proc_gen_p8)
+	if (proc_gen <= proc_gen_p8 || chip_quirk(QUIRK_GEM5_CALLOUTS))
 		add_xics_icps();
 
 	return true;

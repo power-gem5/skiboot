@@ -94,7 +94,7 @@ static struct mem_region skiboot_cpu_stacks = {
 	.type		= REGION_SKIBOOT_FIRMWARE,
 };
 
-static struct mem_region skiboot_mambo_kernel = {
+/*static struct mem_region skiboot_mambo_kernel = {
 	.name		= "ibm,firmware-mambo-kernel",
 	.start		= (unsigned long)KERNEL_LOAD_BASE,
 	.len		= KERNEL_LOAD_SIZE,
@@ -106,8 +106,21 @@ static struct mem_region skiboot_mambo_initramfs = {
 	.start		= (unsigned long)INITRAMFS_LOAD_BASE,
 	.len		= INITRAMFS_LOAD_SIZE,
 	.type		= REGION_SKIBOOT_FIRMWARE,
+};*/
+
+static struct mem_region skiboot_gem5_kernel = {
+	.name		= "ibm,firmware-gem5-kernel",
+	.start		= (unsigned long)KERNEL_LOAD_BASE,
+	.len		= KERNEL_LOAD_SIZE,
+	.type		= REGION_SKIBOOT_FIRMWARE,
 };
 
+/*static struct mem_region skiboot_gem5_initramfs = {
+	.name		= "ibm,firmware-gem5-initramfs",
+	.start		= (unsigned long)INITRAMFS_LOAD_BASE,
+	.len		= INITRAMFS_LOAD_SIZE,
+	.type		= REGION_SKIBOOT_FIRMWARE,
+};*/
 
 struct alloc_hdr {
 	bool free : 1;
@@ -522,7 +535,8 @@ void mem_free(struct mem_region *region, void *mem, const char *location)
 		return;
 
 	/* Your memory is in the region, right? */
-	assert(mem >= region_start(region) + sizeof(*hdr));
+	//prlog(PR_DEBUG, "CUSTOM: mem : 0x%012llx region start:0x%012llx len(hdr):%d",(long long)mem, (long long)region_start(region), (int)sizeof(*hdr));
+  assert(mem >= region_start(region) + sizeof(*hdr));
 	assert(mem < region_start(region) + region->len);
 
 	/* Grab header. */
@@ -775,7 +789,7 @@ static struct mem_region *get_overlap(const struct mem_region *region)
 static bool add_region(struct mem_region *region)
 {
 	struct mem_region *r;
-
+//  prlog(PR_DEBUG, "CUSTOM: region for allocation : 0x%012llx",(long long)region->start);
 	if (mem_regions_finalised) {
 		prerror("MEM: add_region(%s@0x%"PRIx64") called after finalise!\n",
 				region->name, region->start);
@@ -812,7 +826,8 @@ static bool add_region(struct mem_region *region)
 		assert(r->start == region->start);
 		assert(r->len == region->len);
 		list_del_from(&regions, &r->list);
-		free(r);
+	//	prlog(PR_DEBUG,"CUSTOM: Freeing : 0x%012llx",(long long)r->start);
+    free(r);
 	}
 
 	/* Finally, add in our own region. */
@@ -1127,10 +1142,19 @@ void mem_region_init(void)
 		abort();
 	}
 
-	if (chip_quirk(QUIRK_MAMBO_CALLOUTS)) {
+	/*if (chip_quirk(QUIRK_MAMBO_CALLOUTS)) {
 		if (!add_region(&skiboot_mambo_kernel) ||
 		    !add_region(&skiboot_mambo_initramfs)) {
 			prerror("Out of memory adding mambo payload\n");
+			abort();
+		}
+	}*/
+
+	if (chip_quirk(QUIRK_GEM5_CALLOUTS)) {
+    prlog(PR_DEBUG,"Entered Gem5 quirk to load the gem5 kernel start: 0x%012llx",(long long)skiboot_gem5_kernel.start);
+		if (!add_region(&skiboot_gem5_kernel) /*||
+		    !add_region(&skiboot_gem5_initramfs)*/) {
+			prerror("Out of memory adding gem5 payload\n");
 			abort();
 		}
 	}

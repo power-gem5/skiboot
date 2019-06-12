@@ -26,6 +26,7 @@
 #include <device.h>
 #include <processor.h>
 #include <cpu.h>
+#include <chip.h>
 
 static char *con_buf = (char *)INMEM_CON_START;
 static size_t con_in;
@@ -436,6 +437,11 @@ void dummy_console_add_nodes(void)
 	add_opal_console_node(0, "raw", memcons.obuf_size);
 
 	/* Mambo might have left a crap one, clear it */
+  if(chip_quirk(QUIRK_GEM5_CALLOUTS)){
+    p = __dt_find_property(dt_chosen, "stdout-path");
+    if(p)
+      return ;
+  }
 	p = __dt_find_property(dt_chosen, "linux,stdout-path");
 	if (p)
 		dt_del_property(dt_chosen, p);

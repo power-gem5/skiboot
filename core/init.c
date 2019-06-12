@@ -373,6 +373,8 @@ static bool load_kernel(void)
 				kernel_size);
 		}
 	}
+  printf("CUSTOM: Kernel load base at %p\n",
+			       KERNEL_LOAD_BASE);
 
 	if (dt_has_node_property(dt_chosen, "kernel-base-address", NULL)) {
 		kernel_entry = dt_prop_get_u64(dt_chosen,
@@ -403,7 +405,7 @@ static bool load_kernel(void)
 			       KERNEL_LOAD_BASE);
 			/* Hack for STB in Mambo, assume at least 4kb in mem */
 			kernel_size = SECURE_BOOT_HEADERS_SIZE;
-			kernel_entry = (uint64_t)KERNEL_LOAD_BASE;
+      kernel_entry = (uint64_t)KERNEL_LOAD_BASE;
 		}
 		if (stb_is_container(KERNEL_LOAD_BASE, kernel_size)) {
 			stb_container = KERNEL_LOAD_BASE;
@@ -433,7 +435,7 @@ static bool load_kernel(void)
 		return false;
 	}
 
-	if (chip_quirk(QUIRK_MAMBO_CALLOUTS)) {
+	if (chip_quirk(QUIRK_MAMBO_CALLOUTS) || chip_quirk(QUIRK_GEM5_CALLOUTS)) {
 		secureboot_verify(RESOURCE_ID_KERNEL,
 				  stb_container,
 				  SECURE_BOOT_HEADERS_SIZE + kernel_size);
@@ -453,7 +455,8 @@ static void load_initramfs(void)
 
 	loaded = wait_for_resource_loaded(RESOURCE_ID_INITRAMFS,
 					  RESOURCE_SUBID_NONE);
-
+  //if(chip_quirk(QUIRK_GEM5_CALLOUTS)) // hack for sucess as gem5 does not support this resoruce yet.
+  //  loaded = OPAL_SUCCESS;
 	if (loaded != OPAL_SUCCESS || !initramfs_size)
 		return;
 
@@ -474,7 +477,7 @@ static void load_initramfs(void)
 	dt_add_property_u64(dt_chosen, "linux,initrd-end",
 			(uint64_t)initramfs_start + initramfs_size);
 
-	if (chip_quirk(QUIRK_MAMBO_CALLOUTS)) {
+	if (chip_quirk(QUIRK_MAMBO_CALLOUTS) /*|| chip_quirk(QUIRK_GEM5_CALLOUTS)*/) {
 		secureboot_verify(RESOURCE_ID_INITRAMFS,
 				  stb_container,
 				  SECURE_BOOT_HEADERS_SIZE + initramfs_size);
@@ -537,6 +540,8 @@ void __noreturn load_and_boot_kernel(bool is_reboot)
 
 	if (platform.exit)
 		platform.exit();
+  printf("CUSTOM: kernel load base before load_kernel at %p\n",
+			       KERNEL_LOAD_BASE);
 
 	/* Load kernel LID */
 	if (!load_kernel()) {
@@ -630,7 +635,7 @@ void __noreturn load_and_boot_kernel(bool is_reboot)
 
 	printf("INIT: Starting kernel at 0x%llx, fdt at %p %u bytes\n",
 	       kernel_entry, fdt, fdt_totalsize(fdt));
-
+  printf("INIT: MAGIC_NUMBER %08x\n",*((uint32_t *)fdt));
 	/* Disable machine checks on all */
 	cpu_disable_ME_RI_all();
 
@@ -1286,6 +1291,8 @@ void __noreturn __nomcount main_cpu_entry(const void *fdt)
 	cpu_set_radix_mode();
 
 	checksum_romem();
+  printf("CUSTOM: Kernel base at %p\n",
+  		       KERNEL_LOAD_BASE);
 
 	load_and_boot_kernel(false);
 }

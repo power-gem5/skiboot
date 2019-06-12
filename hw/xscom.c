@@ -796,7 +796,7 @@ static void xscom_init_chip_info(struct proc_chip *chip)
 	 * On P9, grab the ECID bits to differenciate
 	 * DD1.01, 1.02, 2.00, etc...
 	 */
-	if (chip_quirk(QUIRK_MAMBO_CALLOUTS)) {
+	if (chip_quirk(QUIRK_MAMBO_CALLOUTS) || chip_quirk(QUIRK_GEM5_CALLOUTS)) {
 		chip->ec_rev = 0;
 	} else if (proc_gen == proc_gen_p9) {
 		uint64_t ecid2 = 0;

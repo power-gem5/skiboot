@@ -115,6 +115,17 @@ void init_chips(void)
 {
 	struct dt_node *xn;
 
+	/* Detect gem5 chip */
+	if(dt_find_by_path(dt_root,"/gem5")){
+		proc_chip_quirks |= QUIRK_NO_CHIPTOD | QUIRK_GEM5_CALLOUTS
+			| QUIRK_NO_F000F | QUIRK_NO_PBA | QUIRK_NO_OCC_IRQ
+			| QUIRK_NO_RNG | QUIRK_SLOW_SIM;
+		prlog(PR_NOTICE, "CHIP: Detected Gem5 simulator\n");
+
+		dt_for_each_compatible(dt_root, xn, "ibm,gem5-chip")
+			init_chip(xn);
+	}
+
 	/* Detect mambo chip */
 	if (dt_find_by_path(dt_root, "/mambo")) {
 		proc_chip_quirks |= QUIRK_NO_CHIPTOD | QUIRK_MAMBO_CALLOUTS

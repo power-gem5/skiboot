@@ -53,6 +53,35 @@ static void mambo_stop_cpu(struct cpu_thread *cpu)
 	callthru_tcl(tcl_cmd, strlen(tcl_cmd));
 }
 
+
+/**************** gem5 direct controls ****************/
+extern unsigned long callthru_gem5_tcl(const char *str, int len);
+static void gem5_sreset_cpu(struct cpu_thread *cpu)
+{
+	uint32_t chip_id = pir_to_chip_id(cpu->pir);
+	uint32_t core_id = pir_to_core_id(cpu->pir);
+	uint32_t thread_id = pir_to_thread_id(cpu->pir);
+	char tcl_cmd[50];
+
+	snprintf(tcl_cmd, sizeof(tcl_cmd),
+			"mysim gem5 cpu %i:%i:%i start_thread 0x100",
+			chip_id, core_id, thread_id);
+	callthru_gem5_tcl(tcl_cmd, strlen(tcl_cmd));
+}
+
+static void gem5_stop_cpu(struct cpu_thread *cpu)
+{
+	uint32_t chip_id = pir_to_chip_id(cpu->pir);
+	uint32_t core_id = pir_to_core_id(cpu->pir);
+	uint32_t thread_id = pir_to_thread_id(cpu->pir);
+	char tcl_cmd[50];
+
+	snprintf(tcl_cmd, sizeof(tcl_cmd),
+			"mysim gem5 cpu %i:%i:%i stop_thread",
+			chip_id, core_id, thread_id);
+	callthru_gem5_tcl(tcl_cmd, strlen(tcl_cmd));
+}
+
 /**************** POWER8 direct controls ****************/
 
 #define P8_EX_TCTL_DIRECT_CONTROLS(t)	(0x10013000 + (t) * 0x10)
@@ -712,6 +741,15 @@ int sreset_all_prepare(void)
 		return OPAL_SUCCESS;
 	}
 
+	if (chip_quirk(QUIRK_GEM5_CALLOUTS)) {
+		for_each_ungarded_cpu(cpu) {
+			if (cpu == this_cpu())
+				continue;
+			gem5_stop_cpu(cpu);
+		}
+		return OPAL_SUCCESS;
+	}
+
 	/* Assert special wakup on all cores. Only on operational cores. */
 	for_each_ungarded_primary(cpu) {
 		if (dctl_set_special_wakeup(cpu) != OPAL_SUCCESS)
@@ -736,7 +774,7 @@ void sreset_all_finish(void)
 {
 	struct cpu_thread *cpu;
 
-	if (chip_quirk(QUIRK_MAMBO_CALLOUTS))
+	if (chip_quirk(QUIRK_MAMBO_CALLOUTS) || chip_quirk(QUIRK_GEM5_CALLOUTS) )
 		return;
 
 	for_each_ungarded_primary(cpu)
@@ -758,6 +796,15 @@ int sreset_all_others(void)
 			if (cpu == this_cpu())
 				continue;
 			mambo_sreset_cpu(cpu);
+		}
+		return OPAL_SUCCESS;
+	}
+
+	if (chip_quirk(QUIRK_GEM5_CALLOUTS)) {
+		for_each_ungarded_cpu(cpu) {
+			if (cpu == this_cpu())
+				continue;
+			gem5_sreset_cpu(cpu);
 		}
 		return OPAL_SUCCESS;
 	}
@@ -851,7 +898,7 @@ int64_t opal_signal_system_reset(int cpu_nr)
 
 void direct_controls_init(void)
 {
-	if (chip_quirk(QUIRK_MAMBO_CALLOUTS))
+	if (chip_quirk(QUIRK_MAMBO_CALLOUTS) || chip_quirk(QUIRK_GEM5_CALLOUTS))
 		return;
 
 	if (proc_gen != proc_gen_p9)

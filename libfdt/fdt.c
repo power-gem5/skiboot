@@ -52,12 +52,13 @@
 
 #include <fdt.h>
 #include <libfdt.h>
+#include <skiboot.h>
 
 #include "libfdt_internal.h"
 
 int fdt_check_header(const void *fdt)
 {
-	if (fdt_magic(fdt) == FDT_MAGIC) {
+  if (fdt_magic(fdt) == FDT_MAGIC) {
 		/* Complete tree */
 		if (fdt_version(fdt) < FDT_FIRST_SUPPORTED_VERSION)
 			return -FDT_ERR_BADVERSION;

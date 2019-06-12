@@ -29,6 +29,7 @@
 static int fdt_error;
 
 #undef DEBUG_FDT
+//#define DEBUG_FDT
 #ifdef DEBUG_FDT
 #define FDT_DBG(fmt, a...)	prlog(PR_DEBUG, "FDT: " fmt, ##a)
 #else

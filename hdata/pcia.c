@@ -21,6 +21,7 @@
 #include <opal.h>
 #include <ccan/str/str.h>
 #include <device.h>
+#include <chip.h>
 
 #include "hdata.h"
 
@@ -62,6 +63,7 @@ static void add_xics_icp(const void *pcia, u32 tcount, const char *compat)
 	__be64 *reg;
 	u32 i, irange[2], rsize;
 
+  prlog(PR_DEBUG, "CUSTOM: within add_xics_icps");
 	rsize = tcount * 2 * sizeof(__be64);
 	reg = malloc(rsize);
 	assert(reg);
@@ -112,7 +114,7 @@ static struct dt_node *add_core_node(struct dt_node *cpus,
 	u32 i, size, threads, ve_flags, l2_phandle, chip_id;
 	__be32 iserv[PCIA_MAX_THREADS];
 
-	/* Look for thread 0 */
+  /* Look for thread 0 */
 	t = find_tada(pcia, 0);
 	if (!t) {
 		prerror("CORE[%i]: Failed to find thread 0 !\n",
@@ -183,7 +185,7 @@ static struct dt_node *add_core_node(struct dt_node *cpus,
 	dt_add_property(cpu, "ibm,ppc-interrupt-server#s", iserv, 4 * threads);
 
 	/* Add the ICP node for this CPU for P7 / P8 */
-	if (proc_gen <= proc_gen_p8)
+	if (proc_gen <= proc_gen_p8 || chip_quirk(QUIRK_GEM5_CALLOUTS))
 		add_xics_icp(pcia, threads, icp_compat);
 
 	return cpu;

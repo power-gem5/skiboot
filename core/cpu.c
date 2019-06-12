@@ -635,7 +635,7 @@ void cpu_set_sreset_enable(bool enabled)
 
 	if (proc_gen == proc_gen_p8) {
 		/* Public P8 Mambo has broken NAP */
-		if (chip_quirk(QUIRK_MAMBO_CALLOUTS))
+		if (chip_quirk(QUIRK_MAMBO_CALLOUTS) || chip_quirk(QUIRK_GEM5_CALLOUTS)) // Will assume gem5 is also broken here
 			return;
 
 		sreset_enabled = enabled;
