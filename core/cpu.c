@@ -514,7 +514,11 @@ static void cpu_idle_pm(enum cpu_wake_cause wake_on)
 		vec = cpu_idle_p8(wake_on);
 		break;
 	case proc_gen_p9:
-		vec = cpu_idle_p9(wake_on);
+    if(chip_quirk(QUIRK_GEM5_CALLOUTS)){
+      vec = cpu_idle_p8(wake_on);
+    }
+    else
+		  vec = cpu_idle_p9(wake_on);
 		break;
 	default:
 		vec = 0;
@@ -649,7 +653,10 @@ void cpu_set_sreset_enable(bool enabled)
 		}
 
 	} else if (proc_gen == proc_gen_p9) {
-		sreset_enabled = enabled;
+		// Assume p9 Gem5 is broken for NAP
+    if(chip_quirk(QUIRK_GEM5_CALLOUTS)) 
+      return ;
+    sreset_enabled = enabled;
 		sync();
 		/*
 		 * Kick everybody out of PM so they can adjust the PM
