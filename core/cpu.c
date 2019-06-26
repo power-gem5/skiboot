@@ -547,7 +547,7 @@ static void cpu_idle_pm(enum cpu_wake_cause wake_on)
 
 void cpu_idle_job(void)
 {
-	if (pm_enabled) {
+	if (pm_enabled && !chip_quirk(QUIRK_GEM5_CALLOUTS)) {
 		cpu_idle_pm(cpu_wake_on_job);
 	} else {
 		struct cpu_thread *cpu = this_cpu();
