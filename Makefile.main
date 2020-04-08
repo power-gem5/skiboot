@@ -138,7 +138,8 @@ CFLAGS += $(call try-cflag,$(CC),-Wjump-misses-init) \
 	  $(call try-cflag,$(CC),-Wno-error=suggest-attribute=const) \
 	  $(call try-cflag,$(CC),-Wno-error=suggest-attribute=noreturn) \
 	  $(call try-cflag,$(CC),-Wstack-usage=1024) \
-	  $(call try-cflag,$(CC),-Wno-error=address-of-packed-member)
+	  $(call try-cflag,$(CC),-Wno-error=address-of-packed-member) \
+	  $(call try-cflag,$(CC),-Wno-error=format-overflow)
 
 CFLAGS += $(CWARNS) $(OPTS) $(DBG)
 
